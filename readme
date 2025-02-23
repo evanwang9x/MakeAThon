@@ -1,0 +1,56 @@
+To test code WITHOUT the ECG setup, use the following code script for arduino:
+void setup() {
+  Serial.begin(9600); 
+}
+
+void loop() {
+  static unsigned long lastTime = 0;
+  static int fakeHeartRate = 60; 
+
+  if (millis() - lastTime > 1000) {
+    lastTime = millis();
+
+    fakeHeartRate = random(80, 90); // Random BPM for you to choose yourself
+
+    Serial.println(fakeHeartRate);
+  }
+
+  delay(10);
+}
+
+To test code WITH an ECG setup, use the following code script for arduino:
+const int inputPin = A5; //Might need to be changed depending on what pin you use.
+const int threshold = 512;
+unsigned long lastBeatTime = 0;
+int beatCount = 0;
+const int samplingRate = 100; 
+
+void setup() {
+    pinMode(inputPin, INPUT);
+    Serial.begin(115200); 
+}
+
+void loop() {
+    static unsigned long lastSampleTime = 0;
+    unsigned long currentTime = millis();
+    
+    if (currentTime - lastSampleTime >= samplingRate) {
+        lastSampleTime = currentTime;
+        
+        int sensorValue = analogRead(inputPin);
+        Serial.print("RAW:");
+        Serial.println(sensorValue);
+
+        if (sensorValue > threshold) {
+            if (currentTime - lastBeatTime > 300) {
+                beatCount++;
+                unsigned long timeDiff = currentTime - lastBeatTime;
+                lastBeatTime = currentTime;
+
+                int bpm = 60000 / timeDiff;
+                Serial.print("BPM:");
+                Serial.println(bpm);
+            }
+        }
+    }
+}
